@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { FEATURED_REVIEWS, getApprovedReviews, submitReview } from '../lib/reviews'
+import { getApprovedReviews, submitReview } from '../lib/api'
 import Reveal from './Reveal'
 import StarRating from './StarRating'
 
@@ -28,7 +28,6 @@ function ReviewCard({ review, delay = 0 }) {
         </div>
         <div>
           <p className="text-sm font-bold text-ink">{review.name}</p>
-          {review.role && <p className="text-xs text-muted">{review.role}</p>}
         </div>
       </div>
     </Reveal>
@@ -36,34 +35,40 @@ function ReviewCard({ review, delay = 0 }) {
 }
 
 export default function Testimonials() {
-  const [approved, setApproved] = useState([])
+  const [reviews, setReviews] = useState([])
+  const [loadError, setLoadError] = useState(false)
   const [form, setForm] = useState({ name: '', rating: 5, comment: '' })
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
-
-  const refresh = () => setApproved(getApprovedReviews())
+  const [sending, setSending] = useState(false)
 
   useEffect(() => {
-    refresh()
-    window.addEventListener('storage', refresh)
-    return () => window.removeEventListener('storage', refresh)
+    getApprovedReviews()
+      .then(setReviews)
+      .catch(() => setLoadError(true))
   }, [])
 
-  const reviews = [...FEATURED_REVIEWS, ...approved]
   const average = reviews.length
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : '5.0'
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!form.name.trim() || !form.comment.trim()) {
       setError('Preencha seu nome e um comentário antes de enviar.')
       return
     }
-    submitReview(form)
+    setSending(true)
     setError('')
-    setSubmitted(true)
-    setForm({ name: '', rating: 5, comment: '' })
+    try {
+      await submitReview(form)
+      setSubmitted(true)
+      setForm({ name: '', rating: 5, comment: '' })
+    } catch (err) {
+      setError(err.message || 'Não foi possível enviar sua avaliação agora. Tente novamente em instantes.')
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -74,18 +79,28 @@ export default function Testimonials() {
           <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
             O que nossos <span className="text-gradient">clientes dizem</span>
           </h2>
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <StarRating value={Math.round(Number(average))} size="sm" />
-            <span className="text-sm font-semibold text-ink">{average} / 5</span>
-            <span className="text-sm text-muted">({reviews.length} avalia{reviews.length === 1 ? 'ção' : 'ções'})</span>
-          </div>
+          {reviews.length > 0 && (
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <StarRating value={Math.round(Number(average))} size="sm" />
+              <span className="text-sm font-semibold text-ink">{average} / 5</span>
+              <span className="text-sm text-muted">({reviews.length} avalia{reviews.length === 1 ? 'ção' : 'ções'})</span>
+            </div>
+          )}
         </Reveal>
 
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {reviews.map((review, i) => (
-            <ReviewCard key={review.id} review={review} delay={(i % 3) * 100} />
-          ))}
-        </div>
+        {loadError && (
+          <p className="mx-auto mt-10 max-w-md text-center text-sm text-muted">
+            Não foi possível carregar as avaliações no momento. Tente novamente mais tarde.
+          </p>
+        )}
+
+        {!loadError && (
+          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {reviews.map((review, i) => (
+              <ReviewCard key={review.id} review={review} delay={(i % 3) * 100} />
+            ))}
+          </div>
+        )}
 
         <Reveal className="mx-auto mt-16 max-w-xl rounded-3xl border border-cyan/25 bg-gradient-to-b from-cyan/[0.06] to-transparent p-8 sm:p-10">
           <h3 className="text-xl font-extrabold text-ink">Encomendou um projeto com a gente?</h3>
@@ -140,9 +155,10 @@ export default function Testimonials() {
 
               <button
                 type="submit"
-                className="w-full rounded-full bg-gradient-to-r from-cyan to-royal px-5 py-3 text-sm font-semibold text-void shadow-lg shadow-cyan/20 transition-transform hover:scale-[1.02]"
+                disabled={sending}
+                className="w-full rounded-full bg-gradient-to-r from-cyan to-royal px-5 py-3 text-sm font-semibold text-void shadow-lg shadow-cyan/20 transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Enviar avaliação
+                {sending ? 'Enviando...' : 'Enviar avaliação'}
               </button>
             </form>
           )}

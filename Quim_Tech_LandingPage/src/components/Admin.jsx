@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react'
 import logo from '../assets/logo.png'
-import { deleteReview, getAllReviews, setReviewStatus } from '../lib/reviews'
+import { adminLogin, adminLogout, deleteReview, getAdminToken, getAllReviews, setReviewStatus } from '../lib/api'
 import StarRating from './StarRating'
-
-const SESSION_KEY = 'quimtech_admin_session'
-const ADMIN_USER = 'quimtechadmin'
-const ADMIN_PASS = 'quimtechadmin'
 
 const STATUS_LABEL = {
   pending: 'Pendente',
@@ -23,14 +19,19 @@ function LoginScreen({ onLogin }) {
   const [user, setUser] = useState('')
   const [pass, setPass] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    if (user === ADMIN_USER && pass === ADMIN_PASS) {
-      sessionStorage.setItem(SESSION_KEY, 'true')
+    setLoading(true)
+    setError('')
+    try {
+      await adminLogin(user, pass)
       onLogin()
-    } else {
+    } catch {
       setError('Usuário ou senha inválidos.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -75,9 +76,10 @@ function LoginScreen({ onLogin }) {
 
           <button
             type="submit"
-            className="w-full rounded-full bg-gradient-to-r from-cyan to-royal px-5 py-3 text-sm font-semibold text-void shadow-lg shadow-cyan/20 transition-transform hover:scale-[1.02]"
+            disabled={loading}
+            className="w-full rounded-full bg-gradient-to-r from-cyan to-royal px-5 py-3 text-sm font-semibold text-void shadow-lg shadow-cyan/20 transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Entrar
+            {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
 
@@ -92,8 +94,14 @@ function LoginScreen({ onLogin }) {
 function Dashboard({ onLogout }) {
   const [reviews, setReviews] = useState([])
   const [filter, setFilter] = useState('pending')
+  const [loadError, setLoadError] = useState('')
 
-  const refresh = () => setReviews(getAllReviews())
+  const refresh = () => {
+    getAllReviews()
+      .then(setReviews)
+      .catch((err) => setLoadError(err.message || 'Não foi possível carregar as avaliações.'))
+  }
+
   useEffect(refresh, [])
 
   const filtered = filter === 'all' ? reviews : reviews.filter((r) => r.status === filter)
@@ -104,13 +112,22 @@ function Dashboard({ onLogout }) {
     rejected: reviews.filter((r) => r.status === 'rejected').length,
   }
 
-  function handleStatus(id, status) {
-    setReviews(setReviewStatus(id, status))
+  async function handleStatus(id, status) {
+    try {
+      await setReviewStatus(id, status)
+      refresh()
+    } catch (err) {
+      window.alert(err.message || 'Não foi possível atualizar esta avaliação.')
+    }
   }
 
-  function handleDelete(id) {
-    if (window.confirm('Excluir esta avaliação permanentemente?')) {
-      setReviews(deleteReview(id))
+  async function handleDelete(id) {
+    if (!window.confirm('Excluir esta avaliação permanentemente?')) return
+    try {
+      await deleteReview(id)
+      refresh()
+    } catch (err) {
+      window.alert(err.message || 'Não foi possível excluir esta avaliação.')
     }
   }
 
@@ -144,6 +161,8 @@ function Dashboard({ onLogout }) {
           sucesso.
         </p>
 
+        {loadError && <p className="mt-6 rounded-2xl border border-red-400/20 bg-red-400/10 p-4 text-sm text-red-300">{loadError}</p>}
+
         <div className="mt-6 flex flex-wrap gap-2">
           {[
             ['pending', 'Pendentes'],
@@ -165,7 +184,7 @@ function Dashboard({ onLogout }) {
         </div>
 
         <div className="mt-6 space-y-4">
-          {filtered.length === 0 && (
+          {filtered.length === 0 && !loadError && (
             <p className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-sm text-muted">
               Nenhuma avaliação nesta categoria.
             </p>
@@ -225,10 +244,10 @@ function Dashboard({ onLogout }) {
 }
 
 export default function Admin() {
-  const [loggedIn, setLoggedIn] = useState(() => sessionStorage.getItem(SESSION_KEY) === 'true')
+  const [loggedIn, setLoggedIn] = useState(() => Boolean(getAdminToken()))
 
   function handleLogout() {
-    sessionStorage.removeItem(SESSION_KEY)
+    adminLogout()
     setLoggedIn(false)
   }
 
