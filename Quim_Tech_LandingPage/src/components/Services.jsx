@@ -179,7 +179,7 @@ export default function Services() {
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Nossas Soluções</span>
           <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-            Duas disciplinas. <span className="text-gradient">Um único padrão de excelência.</span>
+            Duas áreas. <span className="text-gradient">Um único padrão de excelência.</span>
           </h2>
           <p className="mt-4 text-mist">
             Software e química industrial, tratados com o mesmo rigor técnico — escolha por onde começar.
