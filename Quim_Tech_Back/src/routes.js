@@ -26,17 +26,17 @@ function validateReviewInput(body) {
 
 // --- Rotas públicas ---
 
-router.get('/reviews', (req, res) => {
-  res.json(reviews.listApproved())
+router.get('/reviews', async (req, res) => {
+  res.json(await reviews.listApproved())
 })
 
-router.post('/reviews', submitLimiter, (req, res) => {
+router.post('/reviews', submitLimiter, async (req, res) => {
   const error = validateReviewInput(req.body || {})
   if (error) return res.status(400).json({ error })
 
   const { name, comment } = req.body
   const rating = Number(req.body.rating)
-  const review = reviews.create({ name: name.trim(), rating, comment: comment.trim() })
+  const review = await reviews.create({ name: name.trim(), rating, comment: comment.trim() })
   res.status(201).json(review)
 })
 
@@ -57,22 +57,22 @@ router.post('/admin/logout', auth.requireAuth, (req, res) => {
 
 // --- Rotas administrativas (protegidas) ---
 
-router.get('/admin/reviews', auth.requireAuth, (req, res) => {
-  res.json(reviews.listAll())
+router.get('/admin/reviews', auth.requireAuth, async (req, res) => {
+  res.json(await reviews.listAll())
 })
 
-router.patch('/admin/reviews/:id', auth.requireAuth, (req, res) => {
+router.patch('/admin/reviews/:id', auth.requireAuth, async (req, res) => {
   const { status } = req.body || {}
   if (!['approved', 'rejected', 'pending'].includes(status)) {
     return res.status(400).json({ error: 'Status inválido.' })
   }
-  const updated = reviews.updateStatus(req.params.id, status)
+  const updated = await reviews.updateStatus(req.params.id, status)
   if (!updated) return res.status(404).json({ error: 'Avaliação não encontrada.' })
   res.json(updated)
 })
 
-router.delete('/admin/reviews/:id', auth.requireAuth, (req, res) => {
-  const deleted = reviews.remove(req.params.id)
+router.delete('/admin/reviews/:id', auth.requireAuth, async (req, res) => {
+  const deleted = await reviews.remove(req.params.id)
   if (!deleted) return res.status(404).json({ error: 'Avaliação não encontrada.' })
   res.status(204).end()
 })

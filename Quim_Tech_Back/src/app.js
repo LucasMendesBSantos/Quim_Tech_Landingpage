@@ -12,4 +12,12 @@ app.use('/api', routes)
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }))
 
+// Express 5 encaminha automaticamente erros de handlers async (promise
+// rejeitada) pra cá — sem isso, o cliente receberia o HTML de erro padrão
+// do Express em vez de JSON.
+app.use((err, req, res, next) => {
+  console.error(err)
+  res.status(500).json({ error: 'Erro interno do servidor.' })
+})
+
 module.exports = app
