@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { getApprovedReviews, submitReview } from '../lib/api'
 import Reveal from './Reveal'
 import StarRating from './StarRating'
+import TestimonialsCarousel from './TestimonialsCarousel'
+
+const CAROUSEL_THRESHOLD = 3
 
 function initials(name) {
   return name
@@ -94,7 +97,13 @@ export default function Testimonials() {
           </p>
         )}
 
-        {!loadError && (
+        {!loadError && reviews.length > CAROUSEL_THRESHOLD && (
+          <div className="mt-16">
+            <TestimonialsCarousel reviews={reviews} />
+          </div>
+        )}
+
+        {!loadError && reviews.length > 0 && reviews.length <= CAROUSEL_THRESHOLD && (
           <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {reviews.map((review, i) => (
               <ReviewCard key={review.id} review={review} delay={(i % 3) * 100} />
