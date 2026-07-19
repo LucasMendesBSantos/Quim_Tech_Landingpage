@@ -1,0 +1,120 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+
+  --color-void: #04050d;
+  --color-abyss: #070a1c;
+  --color-navy: #0b1030;
+  --color-royal: #2f3fe0;
+  --color-royal-light: #5865ff;
+  --color-cyan: #22b8e0;
+  --color-cyan-light: #6fe0f5;
+  --color-cyan-dim: #17869e;
+  --color-teal: #17b891;
+  --color-teal-light: #5fe3c4;
+  --color-ink: #eef1fb;
+  --color-mist: #aab2d6;
+  --color-muted: #6b7299;
+
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-float-slow: float 11s ease-in-out infinite;
+  --animate-fade-up: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-pulse-glow: pulse-glow 3.5s ease-in-out infinite;
+  --animate-spin-slow: spin 18s linear infinite;
+  --animate-drift: drift 22s linear infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 240px 240px;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--color-cyan);
+  color: var(--color-void);
+}
+
+/* fade-in-on-scroll utility, toggled by IntersectionObserver in useReveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hex-grid-bg {
+  background-image:
+    linear-gradient(30deg, rgba(34, 184, 224, 0.08) 1px, transparent 1px),
+    linear-gradient(150deg, rgba(34, 184, 224, 0.08) 1px, transparent 1px),
+    linear-gradient(270deg, rgba(34, 184, 224, 0.08) 1px, transparent 1px);
+  background-size: 80px 140px;
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, var(--color-cyan-light), var(--color-royal-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
