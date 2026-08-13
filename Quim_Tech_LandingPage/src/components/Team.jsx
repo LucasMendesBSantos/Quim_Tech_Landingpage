@@ -19,6 +19,14 @@ const TEAM = [
     bio: 'Lidera a frente de engenharia de software da Quim Tech: arquitetura de sistemas, integrações e cibersegurança aplicadas a negócios que não podem parar.',
     resumeUrl: 'https://curriculo-online-tech-quim.vercel.app/',
   },
+  {
+    name: 'Wanderson Honorato',
+    role: 'Desenvolvedor Full-Stack',
+    segment: 'Dev',
+    tone: 'teal',
+    bio: 'Desenvolvedor Full-Stack voltado também para banco de dados e análise de dados.',
+    resumeUrl: 'https://portfolio-honorato-jw1b.vercel.app/',
+  },
 ]
 
 export default function Team() {
